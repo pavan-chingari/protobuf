@@ -26,6 +26,7 @@ pub mod __public {
     pub use crate::map::{Map, MapIter, MapMut, MapView, ProxiedInMapValue};
     pub use crate::optional::{AbsentField, FieldEntry, Optional, PresentField};
     pub use crate::primitive::PrimitiveMut;
+    pub use crate::proto;
     pub use crate::proxied::{
         Mut, MutProxy, Proxied, ProxiedWithPresence, SettableValue, View, ViewProxy,
     };
@@ -36,6 +37,13 @@ pub mod __public {
     pub use crate::ParseError;
 }
 pub use __public::*;
+
+/// This is required so that the proto! macro can reference it after being
+/// exported.
+#[doc(hidden)]
+pub mod __macros {
+    pub use paste::paste;
+}
 
 /// Everything in `__internal` is allowed to change without it being considered
 /// a breaking change for the protobuf library. Nothing in here should be
@@ -59,6 +67,7 @@ mod macros;
 mod map;
 mod optional;
 mod primitive;
+mod proto_macro;
 mod proxied;
 mod repeated;
 mod string;
