@@ -2463,7 +2463,14 @@ void MessageGenerator::GenerateImplMemberInit(io::Printer* p,
         }
       };
       separator();
-      p->Emit({{"values", values}}, "_inlined_string_donated_{$values$}");
+      p->Emit({{"values", values}},
+              R"cc(
+#ifdef GOOGLE_PROTOBUF_INTERNAL_DONATE_STEAL_INLINE
+                _inlined_string_donated_{$values$}
+#else   // GOOGLE_PROTOBUF_INTERNAL_DONATE_STEAL_INLINE
+                _inlined_string_donated_ {}
+#endif  // !GOOGLE_PROTOBUF_INTERNAL_DONATE_STEAL_INLINE
+              )cc");
     }
   };
 
@@ -3017,6 +3024,14 @@ void MessageGenerator::GenerateArenaEnabledCopyConstructor(io::Printer* p) {
           arena->OwnCustomDestructor(this, &$classname$::ArenaDtor);
         }
       )cc");
+    } else if (NeedsArenaDestructor() == ArenaDtorNeeds::kOnDemand) {
+      p->Emit(R"cc(
+#ifndef GOOGLE_PROTOBUF_INTERNAL_DONATE_STEAL_INLINE
+        if (arena != nullptr) {
+          arena->OwnCustomDestructor(this, &$classname$::ArenaDtor);
+        }
+#endif  // GOOGLE_PROTOBUF_INTERNAL_DONATE_STEAL_INLINE
+      )cc");
     }
   };
 
@@ -3058,6 +3073,14 @@ void MessageGenerator::GenerateStructors(io::Printer* p) {
                  if (arena != nullptr) {
                    arena->OwnCustomDestructor(this, &$classname$::ArenaDtor);
                  }
+               )cc");
+             } else if (NeedsArenaDestructor() == ArenaDtorNeeds::kOnDemand) {
+               p->Emit(R"cc(
+#ifndef GOOGLE_PROTOBUF_INTERNAL_DONATE_STEAL_INLINE
+                 if (arena != nullptr) {
+                   arena->OwnCustomDestructor(this, &$classname$::ArenaDtor);
+                 }
+#endif  // GOOGLE_PROTOBUF_INTERNAL_DONATE_STEAL_INLINE
                )cc");
              }
            }},
